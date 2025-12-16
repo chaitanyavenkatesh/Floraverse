@@ -1,0 +1,8 @@
+{
+  "name": "Floraverse",
+  "description": "A comprehensive gardening marketplace connecting buyers and sellers, featuring an AI-powered gardening assistant for advice and plant disease detection.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
