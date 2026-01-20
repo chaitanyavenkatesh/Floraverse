@@ -25,7 +25,7 @@ export const generateChatResponse = async (
 
     // 2. Construct the Current Message Content
     const currentParts: any[] = [];
-    
+
     if (imageBase64) {
       currentParts.push({
         inlineData: {
@@ -34,8 +34,8 @@ export const generateChatResponse = async (
         }
       });
       // Add a specific instruction if an image is present
-      currentParts.push({ 
-        text: userMessage ? `[Image Analysis Request] ${userMessage}` : "Analyze this plant image. Identify the plant or diagnose any visible diseases." 
+      currentParts.push({
+        text: userMessage ? `[Image Analysis Request] ${userMessage}` : "Analyze this plant image. Identify the plant or diagnose any visible diseases."
       });
     } else {
       currentParts.push({ text: userMessage });

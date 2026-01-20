@@ -33,7 +33,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-flora-100 shadow-sm transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
@@ -45,20 +45,19 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className={`text-sm font-medium transition-colors duration-200 ${isActive('/') ? 'text-flora-600' : 'text-gray-600 hover:text-flora-500'}`}
             >
               Home
             </Link>
-            
-            <Link 
-              to="/ai-assistant" 
-              className={`flex items-center space-x-1.5 px-4 py-2 rounded-full transition-all duration-200 ${
-                isActive('/ai-assistant') 
-                  ? 'bg-flora-100 text-flora-700' 
+
+            <Link
+              to="/ai-assistant"
+              className={`flex items-center space-x-1.5 px-4 py-2 rounded-full transition-all duration-200 ${isActive('/ai-assistant')
+                  ? 'bg-flora-100 text-flora-700'
                   : 'text-gray-600 hover:bg-flora-50 hover:text-flora-600'
-              }`}
+                }`}
             >
               <MessageCircle className="h-4 w-4" />
               <span className="text-sm font-medium">AI Assistant</span>
@@ -66,18 +65,18 @@ const Navbar: React.FC = () => {
 
             {!user ? (
               <div className="relative" ref={dropdownRef}>
-                <button 
+                <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-1 text-gray-700 hover:text-flora-600 font-medium focus:outline-none transition-colors"
                 >
-                   <span>Login / Sign Up</span>
-                   <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <span>Login / Sign Up</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
-                
+
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
-                    <Link 
-                      to="/auth?role=buyer" 
+                    <Link
+                      to="/auth?role=buyer"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-flora-50 hover:text-flora-700 transition-colors"
                     >
@@ -85,8 +84,8 @@ const Navbar: React.FC = () => {
                       Login as Buyer
                     </Link>
                     <div className="h-px bg-gray-100 mx-4"></div>
-                    <Link 
-                      to="/auth?role=seller" 
+                    <Link
+                      to="/auth?role=seller"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-flora-50 hover:text-flora-700 transition-colors"
                     >
@@ -126,8 +125,8 @@ const Navbar: React.FC = () => {
                   </Link>
                 )}
 
-                <button 
-                  onClick={handleLogout} 
+                <button
+                  onClick={handleLogout}
                   className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200"
                   title="Logout"
                 >
@@ -139,9 +138,9 @@ const Navbar: React.FC = () => {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
-             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600 hover:text-flora-600">
-               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-             </button>
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600 hover:text-flora-600">
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
       </div>
