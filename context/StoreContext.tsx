@@ -6,91 +6,98 @@ interface StoreContextType {
   products: Product[];
   cart: CartItem[];
   notifications: Notification[];
-  login: (email: string, password: string) => boolean; // Returns success status
-  register: (name: string, email: string, password: string, role: UserRole) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, role: UserRole) => Promise<boolean>;
   logout: () => void;
-  addProduct: (product: Omit<Product, 'id' | 'sellerId'>) => void;
+  addProduct: (product: Omit<Product, 'id' | 'sellerId'>) => Promise<void>;
   addToCart: (product: Product, quantity: number) => void;
   removeFromCart: (productId: string) => void;
-  placeOrder: () => void;
+  placeOrder: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Load initial state from localStorage if available
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('flora_user');
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [registeredUsers, setRegisteredUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('flora_users_db');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Initialize with empty array if no local storage exists, removing hardcoded mock data
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('flora_products');
-    return saved ? JSON.parse(saved) : []; 
-  });
-
+  const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('flora_cart');
     return saved ? JSON.parse(saved) : [];
   });
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
-    const saved = localStorage.getItem('flora_notifications');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Fetch initial data from MongoDB API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [prodRes, notifRes] = await Promise.all([
+          fetch('/api/products'),
+          fetch('/api/notifications')
+        ]);
+        
+        if (prodRes.ok) setProducts(await prodRes.json());
+        if (notifRes.ok) setNotifications(await notifRes.json());
+      } catch (error) {
+        console.error("Failed to fetch data from API", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  // Persistence Effects
+  // Persistence Effects for local-only state (user session & cart)
   useEffect(() => {
     if (user) localStorage.setItem('flora_user', JSON.stringify(user));
     else localStorage.removeItem('flora_user');
   }, [user]);
 
   useEffect(() => {
-    localStorage.setItem('flora_users_db', JSON.stringify(registeredUsers));
-  }, [registeredUsers]);
-
-  useEffect(() => {
-    localStorage.setItem('flora_products', JSON.stringify(products));
-  }, [products]);
-
-  useEffect(() => {
     localStorage.setItem('flora_cart', JSON.stringify(cart));
   }, [cart]);
 
-  useEffect(() => {
-    localStorage.setItem('flora_notifications', JSON.stringify(notifications));
-  }, [notifications]);
-
   // Actions
-  const login = (email: string, password: string): boolean => {
-    const foundUser = registeredUsers.find(u => u.email === email && u.password === password);
-    if (foundUser) {
-      setUser(foundUser);
-      return true;
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (res.ok) {
+            const userData = await res.json();
+            setUser(userData);
+            return true;
+        }
+        return false;
+    } catch (e) {
+        return false;
     }
-    return false;
   };
 
-  const register = (name: string, email: string, password: string, role: UserRole): boolean => {
-    if (registeredUsers.some(u => u.email === email)) {
-      return false; // Email exists
+  const register = async (name: string, email: string, password: string, role: UserRole): Promise<boolean> => {
+    try {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password, role })
+        });
+        if (res.ok) {
+            const userData = await res.json();
+            setUser(userData);
+            return true;
+        }
+        return false;
+    } catch (e) {
+        return false;
     }
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      email,
-      role,
-      password // Storing for mock auth
-    };
-    setRegisteredUsers(prev => [...prev, newUser]);
-    setUser(newUser);
-    return true;
   };
 
   const logout = () => {
@@ -98,15 +105,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCart([]);
   };
 
-  const addProduct = (newProductData: Omit<Product, 'id' | 'sellerId'>) => {
+  const addProduct = async (newProductData: Omit<Product, 'id' | 'sellerId'>) => {
     if (!user || user.role !== UserRole.SELLER) return;
     
-    const newProduct: Product = {
-      ...newProductData,
-      id: Math.random().toString(36).substr(2, 9),
-      sellerId: user.id
-    };
-    setProducts(prev => [...prev, newProduct]);
+    try {
+        const res = await fetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...newProductData,
+                sellerId: user.id
+            })
+        });
+        if (res.ok) {
+            const savedProduct = await res.json();
+            setProducts(prev => [...prev, savedProduct]);
+        }
+    } catch (e) {
+        console.error("Failed to add product");
+    }
   };
 
   const addToCart = (product: Product, quantity: number) => {
@@ -127,12 +144,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCart(prev => prev.filter(item => item.id !== productId));
   };
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
     if (!user) return;
     
-    // Create notifications for sellers
-    const newNotifications: Notification[] = cart.map(item => ({
-      id: Math.random().toString(36).substr(2, 9),
+    const newNotifications = cart.map(item => ({
       sellerId: item.sellerId,
       buyerName: user.name,
       productName: item.name,
@@ -141,18 +156,39 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       date: new Date().toLocaleDateString()
     }));
 
-    // Decrease product quantity in global store
-    const updatedProducts = products.map(p => {
-        const cartItem = cart.find(c => c.id === p.id);
-        if (cartItem) {
-            return { ...p, quantityAvailable: Math.max(0, p.quantityAvailable - cartItem.quantityOrdered) };
-        }
-        return p;
-    });
+    try {
+        // Send notifications
+        const notifRes = await fetch('/api/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newNotifications)
+        });
+        
+        if (notifRes.ok) {
+            const savedNotifications = await notifRes.json();
+            setNotifications(prev => [...prev, ...savedNotifications]);
+            
+            // Update product quantities in backend
+            await Promise.all(cart.map(async (item) => {
+                const updatedQty = Math.max(0, item.quantityAvailable - item.quantityOrdered);
+                await fetch(`/api/products/${item.id}/quantity`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quantityAvailable: updatedQty })
+                });
+            }));
+            
+            // Refetch products to get latest state
+            const prodRes = await fetch('/api/products');
+            if (prodRes.ok) {
+                setProducts(await prodRes.json());
+            }
 
-    setProducts(updatedProducts);
-    setNotifications(prev => [...prev, ...newNotifications]);
-    setCart([]); // Clear cart
+            setCart([]); // Clear cart
+        }
+    } catch (e) {
+        console.error("Order placement failed");
+    }
   };
 
   return (
@@ -167,7 +203,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addProduct, 
       addToCart, 
       removeFromCart, 
-      placeOrder
+      placeOrder,
+      isLoading
     }}>
       {children}
     </StoreContext.Provider>

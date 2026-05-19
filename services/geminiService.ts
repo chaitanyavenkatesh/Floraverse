@@ -1,7 +1,7 @@
 import { GoogleGenAI, GenerateContentResponse, Content } from "@google/genai";
 import { ChatMessage } from "../types";
 
-const apiKey = process.env.API_KEY || '';
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
 
 // Initialize Gemini client
 const ai = new GoogleGenAI({ apiKey });
@@ -70,8 +70,10 @@ Keep responses concise, structured, and helpful for a home gardener.`,
     });
 
     return response.text || "I couldn't generate a response. Please try again.";
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "Sorry, I'm having trouble connecting to the gardening knowledge base right now. Please check your connection or try again later.";
+  } catch (error: any) {
+    console.error("Gemini API Error Object:", error);
+    console.error("Error Message:", error.message);
+    console.error("API Key present:", !!apiKey);
+    return `Sorry, I encountered an error: ${error.message}`;
   }
 };

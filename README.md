@@ -50,8 +50,16 @@ FloraVerse is a comprehensive digital ecosystem designed for plant enthusiasts. 
 3.  **Environment Setup**
     Create a `.env` file in the root directory and add your Gemini API key:
     ```env
-    API_KEY=your_gemini_api_key_here
+    VITE_GEMINI_API_KEY=your_gemini_api_key_here
     ```
+
+## 🌐 Deployment to Vercel
+
+This project is optimized for rapid deployment on Vercel as a frontend-only application (data is persisted via browser local storage).
+1. Push this code to a GitHub repository.
+2. Import the project in the Vercel dashboard.
+3. In the Vercel deployment settings, add your `VITE_GEMINI_API_KEY` to the Environment Variables section.
+4. Click Deploy.
 
 4.  **Run Dev Server**
     ```bash

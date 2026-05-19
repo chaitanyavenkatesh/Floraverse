@@ -38,13 +38,13 @@ const Auth: React.FC = () => {
     }
   }, [user, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (isLogin) {
       // Login Logic
-      const success = login(formData.email, formData.password);
+      const success = await login(formData.email, formData.password);
       if (!success) {
         setError('Invalid email or password. Please try again.');
       }
@@ -63,9 +63,9 @@ const Auth: React.FC = () => {
         return;
       }
 
-      const success = register(formData.name, formData.email, formData.password, role);
+      const success = await register(formData.name, formData.email, formData.password, role);
       if (!success) {
-        setError('Email already registered. Please login instead.');
+        setError('Email already registered or server error. Please try again.');
       }
     }
   };
